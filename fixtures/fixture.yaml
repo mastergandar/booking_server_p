@@ -1,0 +1,152 @@
+- model: properties.Amenities
+  pk: 1
+  fields:
+    title: Pool
+    img: media/amenities_images/1.png
+- model: properties.Amenities
+  pk: 2
+  fields:
+    title: Jacuzzi
+    img: media/amenities_images/2.png
+- model: properties.Amenities
+  pk: 3
+  fields:
+    title: Courtyard
+    img: media/amenities_images/3.png
+- model: properties.Amenities
+  pk: 4
+  fields:
+    title: Barbecue area
+    img: media/amenities_images/4.png
+- model: properties.Amenities
+  pk: 5
+  fields:
+    title: Kostrovishche
+    img: media/amenities_images/5.png
+- model: properties.Amenities
+  pk: 6
+  fields:
+    title: Pool table
+    img: media/amenities_images/6.png
+- model: properties.Amenities
+  pk: 7
+  fields:
+    title: Fireplace
+    img: media/amenities_images/7.png
+- model: properties.Amenities
+  pk: 8
+  fields:
+    title: Outdoor dining area
+    img: media/amenities_images/8.png
+- model: properties.Amenities
+  pk: 9
+  fields:
+    title: Simulators
+    img: media/amenities_images/9.png
+- model: properties.Amenities
+  pk: 10
+  fields:
+    title: Wi-Fi
+    img: media/amenities_images/10.png
+- model: properties.Amenities
+  pk: 11
+  fields:
+    title: Television set
+    img: media/amenities_images/11.png
+- model: properties.Amenities
+  pk: 12
+  fields:
+    title: Kitchen
+    img: media/amenities_images/12.png
+- model: properties.Amenities
+  pk: 13
+  fields:
+    title: Washing machine
+    img: media/amenities_images/13.png
+- model: properties.Amenities
+  pk: 14
+  fields:
+    title: Free on-site parking
+    img: media/amenities_images/14.png
+- model: properties.Amenities
+  pk: 15
+  fields:
+    title: Paid parking on site
+    img: media/amenities_images/15.png
+- model: properties.Amenities
+  pk: 16
+  fields:
+    title: Air conditioner
+    img: media/amenities_images/16.png
+- model: properties.Amenities
+  pk: 17
+  fields:
+    title: Work Area
+    img: media/amenities_images/17.png
+- model: properties.Amenities
+  pk: 18
+  fields:
+    title: Outdoor shower
+    img: media/amenities_images/18.png
+- model: properties.Amenities
+  pk: 19
+  fields:
+    title: Smoke detector
+    img: media/amenities_images/19.png
+- model: properties.Amenities
+  pk: 20
+  fields:
+    title: Medicine chest
+    img: media/amenities_images/20.png
+- model: properties.Amenities
+  pk: 21
+  fields:
+    title: Carbon monoxide sensor
+    img: media/amenities_images/21.png
+- model: properties.Amenities
+  pk: 22
+  fields:
+    title: Fire extinguisher
+    img: media/amenities_images/22.png
+- model: properties.Amenities
+  pk: 23
+  fields:
+    title: A bed for children
+    img: media/amenities_images/22.png
+- model: properties.Amenities
+  pk: 24
+  fields:
+    title: Lullaby
+    img: media/amenities_images/22.png
+- model: users.User
+  pk: 1
+  fields:
+    username: Administrator
+    password: root
+    email: root@root.com
+    is_staff: True
+    is_verified: True
+    is_email_active: True
+- model: payments.CancelMultiplier
+  pk: 1
+  fields:
+    amount_168: 1.0
+    amount_72: 0.8
+    amount_24: 0.6
+    amount_0: 0.4
+    updated_at: 2020-05-01 00:00:00
+- model: payments.Promotion
+  pk: 1
+  fields:
+    amount: 100.0
+    updated_at: 2020-05-01 00:00:00
+- model: payments.Promotion
+  pk: 2
+  fields:
+    amount: 200.0
+    updated_at: 2020-05-01 00:00:00
+- model: payments.Promotion
+  pk: 3
+  fields:
+    amount: 300.0
+    updated_at: 2020-05-01 00:00:00

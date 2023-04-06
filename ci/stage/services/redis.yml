@@ -1,0 +1,22 @@
+version: "3.9"
+
+networks:
+
+  proxy_prod: # docker network create --driver=overlay --internal=false --attachable proxy_prod
+    attachable: true
+    internal: false
+    name: proxy_prod
+
+
+services:
+  redis:
+    image: redis:5
+    container_name: server-redis
+    restart: always
+    networks:
+      - proxy_prod
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

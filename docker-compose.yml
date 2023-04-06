@@ -1,0 +1,82 @@
+version: '3.9'
+
+networks:
+  #  docker network create --driver=bridge --internal=false --attachable main-gnet
+  default:
+    driver: bridge
+    external:
+      name: core-net
+
+volumes:
+  media_volume:
+
+services:
+  postgres:
+    image: postgres:14.5
+    container_name: postgres
+    environment:
+      POSTGRES_USER: main
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: main
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U main" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  core: &core
+    build:
+      context: .
+      args:
+        INSTALL_DEV_REQUIREMENTS: "true"
+    container_name: api
+    environment:
+      - DJANGO_SETTINGS_MODULE=core.settings.common
+      - WAITING_DATABASE=true
+      - MIGRATE=true
+      - DB_HOST=postgres
+      - DB_PORT=5432
+    command: python manage.py runserver 0.0.0.0:80
+    volumes:
+      - .:/usr/src/app
+      - media_volume:/usr/src/app/media
+    depends_on:
+      - postgres
+      - redis
+
+  main_ws:
+    build:
+      context: .
+      args:
+        INSTALL_DEV_REQUIREMENTS: "false"
+    container_name: ws
+    restart: always
+    command: daphne -b 0.0.0.0 -p 80 core.asgi:application
+    environment:
+      - DJANGO_SETTINGS_MODULE=core.settings.common
+      - WAITING_DATABASE=true
+      - MIGRATE=true
+      - DB_HOST=postgres
+      - DB_PORT=5432
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    depends_on:
+      - redis
+      - postgres
+    ports:
+      - 4096:80

@@ -1,0 +1,32 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pytest-django = "*"
+djangorestframework = "*"
+drf-yasg = "*"
+django = "==3.2.*"
+psycopg2-binary = "==2.9.1"
+djangorestframework-simplejwt = "*"
+pillow = "*"
+django-filter = "*"
+pytest = "*"
+pyjwt = "*"
+social-auth-app-django = "*"
+gunicorn = "*"
+pyyaml = "*"
+django-cors-headers = "*"
+django-post-office = "*"
+django-ses = "*"
+uvicorn = "*"
+channels = "*"
+channels-redis = "*"
+daphne = "*"
+django-redis = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"

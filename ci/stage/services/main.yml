@@ -1,0 +1,157 @@
+version: "3.9"
+
+networks:
+  proxy_prod: # docker network create --driver=overlay --internal=false --attachable proxy_prod
+    attachable: true
+    internal: false
+    name: proxy_prod
+
+volumes:
+  static_volume:
+  media_volume:
+
+services:
+
+  main_api_proxy:
+    image: nginx:1.19.2
+    restart: always
+    networks:
+      - proxy_prod
+    command: nginx -c /data/conf/nginx.conf
+    volumes:
+      - ./main_proxy/nginx.conf:/data/conf/nginx.conf:ro
+      - ./main_proxy/conf.d:/data/conf.d:ro
+      - media_volume:/media
+      - static_volume:/static
+    depends_on:
+      - main_api
+    healthcheck:
+      test: service nginx status || exit 1
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy_prod
+      - traefik.http.routers.main_api_static.entrypoints=websecure
+      - traefik.http.routers.main_api_static.rule=Host(`${API_DOMAIN}`) && PathPrefix(`/media`, `/static`)
+      - traefik.http.routers.main_api_static.tls=true
+      - traefik.http.routers.main_api_static.tls.certresolver=letsencrypt
+      - traefik.http.routers.main_api_static.service=main_api_static_service
+      - traefik.http.services.main_api_static_service.loadbalancer.server.port=80
+
+  main_api:
+    build:
+        context: ../../../
+        dockerfile: Dockerfile
+    networks:
+      - proxy_prod
+    environment:
+      - BASE_URL=${BASE_URL}
+      - BASE_CLIENT_URL=${BASE_CLIENT_URL}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - SECURE_AUTH_SALT=${SECURE_AUTH_SALT}
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+    restart: always
+    volumes:
+      - media_volume:/usr/src/app/media
+      - static_volume:/usr/src/app/static
+    command: gunicorn -b 0.0.0.0:80 --workers=${GUNICORN_WORKERS_PER_NODE:-4} --timeout 120 --log-level=info --log-file=- core.wsgi:application
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy_prod
+      - traefik.http.routers.main_api.entrypoints=websecure
+      - traefik.http.routers.main_api.rule=Host(`${API_DOMAIN}`)
+      - traefik.http.routers.main_api.tls=true
+      - traefik.http.routers.main_api.tls.certresolver=letsencrypt
+      - traefik.http.routers.main_api.service=main_api_service
+      - traefik.http.services.main_api_service.loadbalancer.server.port=80
+
+  main_ws:
+    build:
+      context: ../../../
+      dockerfile: Dockerfile
+    networks:
+      - proxy_prod
+    restart: always
+    environment:
+      - BASE_URL=${BASE_URL}
+      - BASE_CLIENT_URL=${BASE_CLIENT_URL}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - SECURE_AUTH_SALT=${SECURE_AUTH_SALT}
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+    command: daphne -b 0.0.0.0 -p 4096 -t 60 --application-close-timeout 60 core.asgi:application
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy_prod
+      - traefik.http.routers.main_ws.entrypoints=websecure
+      - traefik.http.routers.main_ws.rule=Host(`${WS_DOMAIN}`) && PathPrefix(`/ws`)
+      - traefik.http.routers.main_ws.tls=true
+      - traefik.http.routers.main_ws.tls.certresolver=letsencrypt
+      - traefik.http.routers.main_ws.service=main_ws_service
+      - traefik.http.services.main_ws_service.loadbalancer.server.port=4096
+    ports:
+      - "4096:80"
+
+  main_tasks:
+    build:
+        context: ../../../
+        dockerfile: Dockerfile
+    networks:
+      - proxy_prod
+    environment:
+      - BASE_URL=${BASE_URL}
+      - BASE_CLIENT_URL=${BASE_CLIENT_URL}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - SECURE_AUTH_SALT=${SECURE_AUTH_SALT}
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+    command: celery -A main worker -l info -n worker_celery --concurrency=10
+    healthcheck:
+      test: celery inspect ping
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  main_beat:
+    build:
+        context: ../../../
+        dockerfile: Dockerfile
+    networks:
+      - proxy_prod
+    environment:
+      - BASE_URL=${BASE_URL}
+      - BASE_CLIENT_URL=${BASE_CLIENT_URL}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - SECURE_AUTH_SALT=${SECURE_AUTH_SALT}
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+    command: celery -A main beat -l info --pidfile=/tmp/celeryd.pid
+    healthcheck:
+      test: celery inspect ping
+      interval: 30s
+      timeout: 10s
+      retries: 3

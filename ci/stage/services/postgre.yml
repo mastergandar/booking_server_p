@@ -1,0 +1,35 @@
+version: "3.9"
+
+networks:
+  proxy_prod: # docker network create --driver=overlay --internal=false --attachable proxy_prod
+    attachable: true
+    internal: false
+    name: proxy_prod
+
+volumes:
+  lottery-pgdata:
+
+services:
+  postgres:
+    image: postgres:12.2
+    container_name: server-postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_preload_libraries=pg_stat_statements"
+      - "-c"
+      - "pg_stat_statements.track=all"
+    networks:
+      - proxy_prod
+    volumes:
+      - lottery-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U main"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
